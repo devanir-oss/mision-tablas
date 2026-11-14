@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tablas">
+<meta name="theme-color" content="#0b1033">
+<title>Misión Tablas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0b1033;--bg2:#1b2a6b;--card:#ffffff14;--line:#ffffff26;
+  --txt:#f4f6ff;--mut:#aab3e0;--acc:#ffcc3d;--ok:#3ddc84;--bad:#ff5d6c;--blue:#4fc3ff;--pur:#b388ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;touch-action:manipulation}
+body{font-family:'Baloo 2',system-ui,sans-serif;color:var(--txt);
+  background:radial-gradient(1200px 800px at 80% -10%,#3b2a8a 0%,transparent 60%),linear-gradient(160deg,var(--bg1),var(--bg2));
+  min-height:100vh;overflow-x:hidden}
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:20px 20px 40px;min-height:100vh;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column;gap:18px;animation:fade .25s ease}
+.screen.on{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1{font-size:clamp(40px,7vw,68px);margin:0;line-height:1;letter-spacing:.5px}
+h1 span{color:var(--acc)}
+h2{margin:0;font-size:28px}
+.sub{color:var(--mut);font-size:19px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 16px;font-size:18px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px}
+.btn{border:0;border-radius:18px;padding:14px 22px;font:700 22px 'Baloo 2',sans-serif;color:#1a1440;background:var(--acc);cursor:pointer;box-shadow:0 5px 0 #c48f00;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c48f00}
+.btn.sec{background:#ffffff22;color:var(--txt);box-shadow:0 5px 0 #00000055}
+.btn.big{font-size:30px;padding:18px 30px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.grow{flex:1}
+/* niveles */
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.lvl{border:3px solid transparent;border-radius:22px;padding:16px;cursor:pointer;background:var(--card);text-align:left;color:var(--txt);font-family:inherit;transition:.15s}
+.lvl.sel{border-color:var(--acc);background:#ffcc3d1c;transform:scale(1.02)}
+.lvl .ic{font-size:40px;line-height:1}
+.lvl b{display:block;font-size:24px;margin-top:4px}
+.lvl small{color:var(--mut);font-size:16px;display:block;line-height:1.25}
+.lvl .rec{margin-top:8px;font-size:15px;color:var(--acc)}
+/* tablas */
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.tb{border:0;border-radius:16px;padding:12px 0;font:800 26px 'Baloo 2';background:#ffffff1a;color:var(--txt);cursor:pointer;position:relative}
+.tb.on{background:var(--blue);color:#06213a}
+.tb .m{position:absolute;top:-6px;right:-4px;font-size:16px}
+/* juego */
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.hud .card{padding:10px 12px;text-align:center}
+.hud .k{color:var(--mut);font-size:15px}
+.hud .v{font-size:28px;font-weight:800;line-height:1.1}
+.timer{height:16px;border-radius:99px;background:#ffffff1a;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ok),var(--acc));border-radius:99px;transform-origin:left}
+.qwrap{position:relative;text-align:center;padding:26px 10px 10px}
+.q{font-size:clamp(70px,13vw,128px);font-weight:800;line-height:1}
+.q .ans{display:inline-block;min-width:1.4em;border-bottom:6px solid var(--acc);color:var(--acc)}
+.streak{position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:20px;color:var(--acc);font-weight:800}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.ch{border:0;border-radius:22px;padding:22px 0;font:800 46px 'Baloo 2';background:#ffffff1f;color:var(--txt);cursor:pointer;box-shadow:0 6px 0 #00000055}
+.ch:active{transform:translateY(4px);box-shadow:0 2px 0 #00000055}
+.ch.good{background:var(--ok);color:#06331b}.ch.wrong{background:var(--bad)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px;margin:0 auto;width:100%}
+.pad button{border:0;border-radius:20px;padding:16px 0;font:800 40px 'Baloo 2';background:#ffffff1f;color:var(--txt);cursor:pointer;box-shadow:0 6px 0 #00000055}
+.pad button:active{transform:translateY(4px);box-shadow:0 2px 0 #00000055}
+.pad .ok{background:var(--ok);color:#06331b}.pad .del{background:#ffffff33}
+.fx{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-size:44px;font-weight:800;pointer-events:none;z-index:9;animation:pop .9s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-120%) scale(1)}}
+.shake{animation:sh .35s}
+@keyframes sh{20%,60%{transform:translateX(-12px)}40%,80%{transform:translateX(12px)}}
+.flash-ok{animation:fo .4s}.flash-bad{animation:fb .4s}
+@keyframes fo{0%{box-shadow:inset 0 0 0 999px #3ddc8433}}
+@keyframes fb{0%{box-shadow:inset 0 0 0 999px #ff5d6c33}}
+/* resultado */
+.big-stars{font-size:72px;text-align:center;letter-spacing:8px}
+.big-stars .off{opacity:.2;filter:grayscale(1)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stats .card{text-align:center}
+.stats .v{font-size:34px;font-weight:800}
+.stats .k{color:var(--mut)}
+.mist{display:flex;flex-wrap:wrap;gap:8px}
+.mist span{background:#ff5d6c26;border:1px solid #ff5d6c66;border-radius:12px;padding:4px 12px;font-size:20px}
+.newb{background:linear-gradient(135deg,#ffcc3d33,#b388ff33);border:2px solid var(--acc)}
+/* premios */
+.medals{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.md{text-align:center;padding:14px 8px;border-radius:20px;background:var(--card);border:1px solid var(--line)}
+.md .e{font-size:48px;line-height:1.1}
+.md b{display:block;font-size:18px}
+.md small{color:var(--mut);font-size:14px;line-height:1.2;display:block}
+.md.lock .e{filter:grayscale(1);opacity:.25}
+.md.lock b{color:var(--mut)}
+.rank{display:flex;align-items:center;gap:14px}
+.rank .e{font-size:54px}
+.bar{height:14px;background:#ffffff1a;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc)}
+/* tabla completa */
+.grid{display:grid;grid-template-columns:repeat(13,1fr);gap:3px}
+.grid div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:clamp(12px,2.1vw,20px);font-weight:700;background:#ffffff10;cursor:pointer}
+.grid .h{background:#ffffff26;color:var(--acc);font-weight:800}
+.grid .hl{background:#4fc3ff44}
+.grid .x{background:var(--acc)!important;color:#1a1440}
+.grid .weak{box-shadow:inset 0 0 0 2px var(--bad)}
+.fact{text-align:center;font-size:40px;font-weight:800;min-height:56px}
+.legend{color:var(--mut);font-size:15px}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
+.modal.on{display:flex}
+.modal .card{max-width:480px;width:100%;background:#1d2766;text-align:center}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="app">
+
+<!-- INICIO -->
+<section class="screen on" id="s-home">
+  <div class="top">
+    <div>
+      <h1>Misión <span>Tablas</span> 🚀</h1>
+      <p class="sub">Responde rápido, haz rachas y gana medallas.</p>
+    </div>
+    <div class="row">
+      <div class="pill" id="h-rank">🧑‍🚀 Cadete</div>
+      <div class="pill">⭐ <span id="h-stars">0</span></div>
+    </div>
+    <div class="legend" style="width:100%;text-align:right">📱 Tu avance se guarda en este iPad</div>
+  </div>
+
+  <div class="card">
+    <h2>1. Elige tu nivel</h2>
+    <div class="levels" id="levels" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <div class="top"><h2>2. Elige las tablas</h2>
+      <div class="row"><button class="btn sec" onclick="setTabs('all')">Todas</button><button class="btn sec" onclick="setTabs('none')">Ninguna</button></div>
+    </div>
+    <div class="tabs" id="tabs" style="margin-top:12px"></div>
+    <p class="legend" style="margin:10px 0 0">🏅 = tabla dominada (≥90% en 20+ respuestas)</p>
+  </div>
+
+  <div class="row">
+    <button class="btn big grow" onclick="startGame()">¡Despegar! 🚀</button>
+    <button class="btn sec" onclick="show('s-medals')">🏆 Premios</button>
+    <button class="btn sec" onclick="show('s-table')">📋 Tabla completa</button>
+  </div>
+</section>
+
+<!-- JUEGO -->
+<section class="screen" id="s-game">
+  <div class="top">
+    <button class="btn sec" onclick="quitGame()">✕ Salir</button>
+    <div class="pill" id="g-prog">1 / 20</div>
+    <div class="pill" id="g-lives">❤️❤️❤️</div>
+  </div>
+  <div class="hud">
+    <div class="card"><div class="k">Puntos</div><div class="v" id="g-score">0</div></div>
+    <div class="card"><div class="k">Racha</div><div class="v" id="g-streak">0</div></div>
+    <div class="card"><div class="k">Multiplicador</div><div class="v" id="g-mult">x1</div></div>
+    <div class="card"><div class="k">Nivel</div><div class="v" id="g-lvl">—</div></div>
+  </div>
+  <div class="timer"><i id="g-timer"></i></div>
+  <div class="card qwrap" id="g-card">
+    <div class="streak" id="g-fire"></div>
+    <div class="q" id="g-q">7 × 8 = <span class="ans">?</span></div>
+  </div>
+  <div id="g-input"></div>
+</section>
+
+<!-- RESULTADO -->
+<section class="screen" id="s-result">
+  <h1 id="r-title" style="text-align:center">¡Misión cumplida!</h1>
+  <div class="big-stars" id="r-stars"></div>
+  <div class="stats">
+    <div class="card"><div class="v" id="r-score">0</div><div class="k">Puntos</div></div>
+    <div class="card"><div class="v" id="r-acc">0%</div><div class="k">Aciertos</div></div>
+    <div class="card"><div class="v" id="r-streak">0</div><div class="k">Mejor racha</div></div>
+    <div class="card"><div class="v" id="r-time">0s</div><div class="k">Tiempo promedio</div></div>
+  </div>
+  <div id="r-new"></div>
+  <div class="card" id="r-mist-card"><h2>Para practicar</h2><div class="mist" id="r-mist" style="margin-top:10px"></div></div>
+  <div class="row">
+    <button class="btn big grow" onclick="startGame()">Otra vez 🔁</button>
+    <button class="btn sec" id="r-retry" onclick="startGame(true)">Practicar errores</button>
+    <button class="btn sec" onclick="show('s-home')">Inicio</button>
+  </div>
+</section>
+
+<!-- PREMIOS -->
+<section class="screen" id="s-medals">
+  <div class="top"><h2>🏆 Premios</h2><button class="btn sec" onclick="show('s-home')">← Volver</button></div>
+  <div class="card rank">
+    <div class="e" id="m-rank-e">🧑‍🚀</div>
+    <div class="grow">
+      <b style="font-size:26px" id="m-rank">Cadete</b>
+      <div class="legend" id="m-rank-next"></div>
+      <div class="bar" style="margin-top:6px"><i id="m-rank-bar" style="width:0"></i></div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="card"><div class="v" id="m-games">0</div><div class="k">Misiones</div></div>
+    <div class="card"><div class="v" id="m-correct">0</div><div class="k">Respuestas correctas</div></div>
+    <div class="card"><div class="v" id="m-best">0</div><div class="k">Récord de puntos</div></div>
+    <div class="card"><div class="v" id="m-bstreak">0</div><div class="k">Mejor racha</div></div>
+  </div>
+  <h2>Medallas</h2>
+  <div class="medals" id="medals"></div>
+  <div class="card">
+    <h2>💾 Respaldo</h2>
+    <p class="sub" style="margin:6px 0 12px">Copia tu código y guárdalo (notas, WhatsApp). Con él recuperas tu avance en este u otro dispositivo.</p>
+    <div class="row"><button class="btn" onclick="exportBk()">Copiar código</button><button class="btn sec" onclick="importBk()">Restaurar</button><button class="btn sec" onclick="askReset()">Borrar progreso</button></div>
+  </div>
+</section>
+
+<!-- TABLA COMPLETA -->
+<section class="screen" id="s-table">
+  <div class="top"><h2>📋 Tabla completa</h2><button class="btn sec" onclick="show('s-home')">← Volver</button></div>
+  <div class="fact" id="t-fact">Toca un cuadro</div>
+  <div class="card"><div class="grid" id="grid"></div></div>
+  <p class="legend">Borde rojo = operaciones que más fallas. Toca un número de la orilla para ver toda esa tabla.</p>
+</section>
+
+</div>
+
+<div class="modal" id="modal"><div class="card"><h2 id="mo-t"></h2><p class="sub" id="mo-p" style="margin:10px 0 18px"></p><textarea id="mo-ta" style="display:none;width:100%;height:120px;border-radius:12px;border:0;padding:10px;font:14px monospace;margin-bottom:14px;user-select:text;-webkit-user-select:text"></textarea><div class="row" id="mo-b" style="justify-content:center"></div></div></div>
+
+<script>
+/* ===== Configuración ===== */
+const LEVELS=[
+ {id:0,ic:'🛸',name:'Cadete',desc:'Opción múltiple · 10 s por pregunta',time:10,mode:'choice',mult:1,missing:false},
+ {id:1,ic:'🚀',name:'Piloto',desc:'Opción múltiple · 6 s',time:6,mode:'choice',mult:2,missing:false},
+ {id:2,ic:'🛰️',name:'Comandante',desc:'Escribe la respuesta · 7 s',time:7,mode:'pad',mult:3,missing:false},
+ {id:3,ic:'🌌',name:'Leyenda',desc:'Escribe · 4.5 s · incluye 7 × ? = 56',time:4.5,mode:'pad',mult:5,missing:true},
+];
+const Q_PER_ROUND=20, LIVES=3;
+const RANKS=[[0,'🧑‍🚀','Cadete'],[30,'🚀','Piloto'],[90,'🛰️','Navegante'],[200,'🪐','Capitán'],[400,'☄️','Comandante'],[700,'🌟','Almirante'],[1100,'🌌','Leyenda de las Tablas']];
+const MEDALS=[
+ ['first','🎖️','Primer despegue','Termina tu primera misión'],
+ ['s5','🔥','En llamas','Racha de 5'],
+ ['s10','☄️','Cometa','Racha de 10'],
+ ['s20','🌠','Imparable','Racha de 20 (ronda completa)'],
+ ['perfect','💎','Perfecto','20 de 20 sin errores'],
+ ['flash','⚡','Rayo','Responde en menos de 1.5 s'],
+ ['flash10','🏎️','Velocidad luz','10 respuestas seguidas en menos de 2 s'],
+ ['p1000','💰','Mil puntos','1,000 puntos en una ronda'],
+ ['p3000','🏦','Tesoro espacial','3,000 puntos en una ronda'],
+ ['lvl1','🚀','Piloto','3 estrellas en Piloto'],
+ ['lvl2','🛰️','Comandante','3 estrellas en Comandante'],
+ ['lvl3','🌌','Leyenda','3 estrellas en Leyenda'],
+ ['g10','📅','Constante','10 misiones jugadas'],
+ ['g50','🏅','Veterano','50 misiones jugadas'],
+ ['c500','🧠','Cerebro','500 respuestas correctas'],
+ ['all12','👑','Rey de las tablas','Domina las 12 tablas'],
+];
+
+/* ===== Estado guardado ===== */
+const KEY='mision_tablas_v1';
+let S=load();
+function blank(){return {stars:0,games:0,correct:0,best:0,bstreak:0,medals:{},lvlBest:[0,0,0,0],facts:{},level:0,tabs:[2,3,4,5]}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return Object.assign(blank(),s||{})}catch(e){return blank()}}
+function save(){S.updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+
+/* ===== Sonido ===== */
+let AC=null;
+function snd(type){
+  try{
+    if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume();
+    const seq={ok:[[660,.08],[880,.12]],bad:[[220,.18],[160,.2]],tap:[[520,.03]],win:[[523,.1],[659,.1],[784,.1],[1047,.25]],medal:[[784,.08],[988,.08],[1175,.08],[1568,.3]]}[type];
+    let t=AC.currentTime;
+    seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type==='bad'?'sawtooth':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);t+=d*.9});
+  }catch(e){}
+}
+
+/* ===== Navegación ===== */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+  if(id==='s-home')renderHome(); if(id==='s-medals')renderMedals(); if(id==='s-table')renderGrid(); window.scrollTo(0,0)}
+
+function rankOf(st){let r=RANKS[0],nx=null;for(let i=0;i<RANKS.length;i++){if(st>=RANKS[i][0]){r=RANKS[i];nx=RANKS[i+1]||null}}return {r,nx}}
+
+/* ===== Inicio ===== */
+function renderHome(){
+  const {r}=rankOf(S.stars);
+  document.getElementById('h-rank').textContent=r[1]+' '+r[2];
+  document.getElementById('h-stars').textContent=S.stars;
+  document.getElementById('levels').innerHTML=LEVELS.map(l=>`<button class="lvl ${S.level===l.id?'sel':''}" onclick="pickLevel(${l.id})"><div class="ic">${l.ic}</div><b>${l.name}</b><small>${l.desc}<br>Puntos x${l.mult}</small><div class="rec">${'★'.repeat(S.lvlBest[l.id])}${'☆'.repeat(3-S.lvlBest[l.id])}</div></button>`).join('');
+  const tb=document.getElementById('tabs');tb.innerHTML='';
+  for(let n=1;n<=12;n++){const b=document.createElement('button');b.className='tb'+(S.tabs.includes(n)?' on':'');b.innerHTML=n+(mastered(n)?'<span class="m">🏅</span>':'');b.onclick=()=>{snd('tap');S.tabs=S.tabs.includes(n)?S.tabs.filter(x=>x!==n):[...S.tabs,n];save();renderHome()};tb.appendChild(b)}
+}
+function pickLevel(i){snd('tap');S.level=i;save();renderHome()}
+function setTabs(m){snd('tap');S.tabs=m==='all'?[1,2,3,4,5,6,7,8,9,10,11,12]:[];save();renderHome()}
+
+/* Estadística por operación: clave "a×b" con a<=b */
+function fk(a,b){return a<=b?a+'x'+b:b+'x'+a}
+function factStat(a,b){return S.facts[fk(a,b)]||{c:0,w:0}}
+function tableStat(n){let c=0,w=0;for(let k=1;k<=12;k++){const f=factStat(n,k);c+=f.c;w+=f.w}return {c,w}}
+function mastered(n){const t=tableStat(n);return t.c+t.w>=20&&t.c/(t.c+t.w)>=.9}
+
+/* ===== Juego ===== */
+let G=null,timerRAF=null;
+function buildQuestions(retry){
+  const L=LEVELS[S.level];let pool=[];
+  if(retry&&G&&G.mistakes.length){G.mistakes.forEach(m=>pool.push([m.a,m.b,3]))}
+  else S.tabs.forEach(t=>{for(let k=1;k<=12;k++){const f=factStat(t,k);const weight=1+Math.min(4,f.w*2)-(f.c>5&&f.w===0?.5:0);pool.push([t,k,weight])}});
+  const qs=[];let last='';
+  for(let i=0;i<Q_PER_ROUND;i++){
+    let tot=pool.reduce((s,p)=>s+p[2],0),r=Math.random()*tot,pick=pool[0];
+    for(const p of pool){r-=p[2];if(r<=0){pick=p;break}}
+    let [a,b]=pick; if(Math.random()<.5)[a,b]=[b,a];
+    const key=a+'x'+b; if(key===last&&pool.length>1){i--;continue} last=key;
+    const missing=L.missing&&Math.random()<.35;
+    qs.push({a,b,ans:missing?b:a*b,missing,prod:a*b});
+  }
+  return qs;
+}
+function startGame(retry){
+  if(!S.tabs.length){modal('Elige tablas','Selecciona al menos una tabla para despegar.',[['OK',closeModal]]);return}
+  snd('tap');
+  const qs=buildQuestions(retry);
+  G={L:LEVELS[S.level],qs,i:0,score:0,streak:0,bestStreak:0,lives:LIVES,ok:0,answered:0,times:[],mistakes:[],fast:0,newMedals:[],typed:'',locked:false};
+  document.getElementById('g-lvl').textContent=G.L.ic;
+  show('s-game');nextQ();
+}
+function multOf(st){return st>=15?4:st>=10?3:st>=5?2:1}
+function updHud(){
+  document.getElementById('g-score').textContent=G.score.toLocaleString('es-MX');
+  document.getElementById('g-streak').textContent=G.streak;
+  document.getElementById('g-mult').textContent='x'+multOf(G.streak);
+  document.getElementById('g-prog').textContent=Math.min(G.i+1,G.qs.length)+' / '+G.qs.length;
+  document.getElementById('g-lives').textContent='❤️'.repeat(G.lives)+'🖤'.repeat(LIVES-G.lives);
+  document.getElementById('g-fire').textContent=G.streak>=5?'🔥'.repeat(Math.min(5,Math.floor(G.streak/5)))+' ¡Racha '+G.streak+'!':'';
+}
+function qText(q,typed){
+  const box=`<span class="ans">${typed||'?'}</span>`;
+  return q.missing?`${q.a} × ${box} = ${q.prod}`:`${q.a} × ${q.b} = ${box}`;
+}
+function nextQ(){
+  if(G.i>=G.qs.length||G.lives<=0)return endGame();
+  const q=G.qs[G.i];G.typed='';G.locked=false;
+  document.getElementById('g-q').innerHTML=qText(q);
+  const inp=document.getElementById('g-input');
+  if(G.L.mode==='choice'){
+    const opts=new Set([q.ans]);
+    const cands=[q.ans+q.a,q.ans-q.a,q.ans+q.b,q.ans-q.b,(q.a+1)*q.b,q.a*(q.b-1),q.ans+10,q.ans-10,q.ans+1,q.ans-1].filter(x=>x>0&&x!==q.ans);
+    while(opts.size<4&&cands.length){opts.add(cands.splice(Math.floor(Math.random()*cands.length),1)[0])}
+    while(opts.size<4)opts.add(q.ans+opts.size*3);
+    const arr=[...opts].sort(()=>Math.random()-.5);
+    inp.innerHTML='<div class="choices">'+arr.map(v=>`<button class="ch" onclick="answer(${v},this)">${v}</button>`).join('')+'</div>';
+  }else{
+    inp.innerHTML='<div class="pad">'+[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="key(${n})">${n}</button>`).join('')+'<button class="del" onclick="key(-1)">⌫</button><button onclick="key(0)">0</button><button class="ok" onclick="key(-2)">✓</button></div>';
+  }
+  updHud();startTimer();
+}
+function key(n){
+  if(G.locked)return;snd('tap');const q=G.qs[G.i];
+  if(n===-1)G.typed=G.typed.slice(0,-1);
+  else if(n===-2){if(G.typed)answer(parseInt(G.typed,10));return}
+  else if(G.typed.length<3)G.typed+=n;
+  document.getElementById('g-q').innerHTML=qText(q,G.typed);
+  // auto-enviar cuando ya tiene los dígitos de la respuesta correcta
+  if(G.typed.length===String(q.ans).length&&parseInt(G.typed,10)===q.ans)answer(q.ans);
+}
+function startTimer(){
+  cancelAnimationFrame(timerRAF);G.t0=performance.now();const bar=document.getElementById('g-timer');
+  const tick=()=>{const el=(performance.now()-G.t0)/1000,f=Math.max(0,1-el/G.L.time);
+    bar.style.transform=`scaleX(${f})`;bar.style.background=f>.5?'linear-gradient(90deg,#3ddc84,#ffcc3d)':f>.25?'#ffcc3d':'#ff5d6c';
+    if(f<=0){answer(null);return}timerRAF=requestAnimationFrame(tick)};
+  tick();
+}
+function fx(txt,color){const d=document.createElement('div');d.className='fx';d.style.color=color;d.textContent=txt;document.body.appendChild(d);setTimeout(()=>d.remove(),900)}
+function answer(v,btn){
+  if(G.locked)return;G.locked=true;cancelAnimationFrame(timerRAF);
+  const q=G.qs[G.i],el=(performance.now()-G.t0)/1000,good=v===q.ans,card=document.getElementById('g-card');
+  const f=S.facts[fk(q.a,q.b)]||(S.facts[fk(q.a,q.b)]={c:0,w:0});
+  G.answered++;
+  if(good){
+    f.c++;G.ok++;G.streak++;G.bestStreak=Math.max(G.bestStreak,G.streak);G.times.push(el);
+    const speed=Math.max(0,1-el/G.L.time);
+    const pts=Math.round((10+Math.round(speed*20))*G.L.mult*multOf(G.streak));
+    G.score+=pts;
+    if(el<1.5)award('flash');
+    G.fast=el<2?G.fast+1:0;if(G.fast>=10)award('flash10');
+    if(G.streak>=5)award('s5');if(G.streak>=10)award('s10');if(G.streak>=20)award('s20');
+    snd('ok');fx('+'+pts+(el<1.5?' ⚡':''),'#3ddc84');
+    if(btn)btn.classList.add('good');card.classList.remove('flash-ok');void card.offsetWidth;card.classList.add('flash-ok');
+    document.getElementById('g-q').innerHTML=qText(q,String(q.ans));
+  }else{
+    f.w++;G.streak=0;G.fast=0;G.lives--;
+    G.mistakes.push({a:q.a,b:q.b});
+    snd('bad');fx(v===null?'⏰ ¡Tiempo!':'✗','#ff5d6c');
+    if(btn)btn.classList.add('wrong');
+    document.querySelectorAll('.ch').forEach(b=>{if(+b.textContent===q.ans)b.classList.add('good')});
+    card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake');
+    document.getElementById('g-q').innerHTML=qText(q,`<span style="color:#3ddc84">${q.ans}</span>`);
+  }
+  save();updHud();G.i++;
+  setTimeout(nextQ,good?550:1500);
+}
+function quitGame(){cancelAnimationFrame(timerRAF);G.locked=true;
+  modal('¿Abortar misión?','Perderás los puntos de esta ronda.',[['Seguir jugando',()=>{closeModal();G.locked=false;startTimer()}],['Salir',()=>{closeModal();show('s-home')}]])}
+
+/* ===== Fin de ronda ===== */
+function endGame(){
+  cancelAnimationFrame(timerRAF);
+  const acc=G.answered?G.ok/G.qs.length:0;
+  let stars=G.lives<=0?0:acc>=.95?3:acc>=.8?2:acc>=.6?1:0;
+  const prevRank=rankOf(S.stars).r;
+  S.stars+=stars;S.games++;S.correct+=G.ok;
+  const newRecord=G.score>S.best;S.best=Math.max(S.best,G.score);S.bstreak=Math.max(S.bstreak,G.bestStreak);
+  S.lvlBest[G.L.id]=Math.max(S.lvlBest[G.L.id],stars);
+  award('first');
+  if(G.ok===G.qs.length&&G.lives===LIVES)award('perfect');
+  if(G.score>=1000)award('p1000');if(G.score>=3000)award('p3000');
+  if(stars===3&&G.L.id>=1)award('lvl'+G.L.id);
+  if(S.games>=10)award('g10');if(S.games>=50)award('g50');if(S.correct>=500)award('c500');
+  if([1,2,3,4,5,6,7,8,9,10,11,12].every(mastered))award('all12');
+  save();
+  const newRank=rankOf(S.stars).r;
+  document.getElementById('r-title').textContent=G.lives<=0?'¡Nave sin energía! 🛠️':stars===3?'¡Misión perfecta! 🌟':'¡Misión cumplida! 🚀';
+  document.getElementById('r-stars').innerHTML=[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">⭐</span>`).join('');
+  document.getElementById('r-score').textContent=G.score.toLocaleString('es-MX');
+  document.getElementById('r-acc').textContent=Math.round(acc*100)+'%';
+  document.getElementById('r-streak').textContent=G.bestStreak;
+  const avg=G.times.length?G.times.reduce((a,b)=>a+b,0)/G.times.length:0;
+  document.getElementById('r-time').textContent=avg?avg.toFixed(1)+' s':'—';
+  let nw='';
+  if(newRecord&&G.score>0)nw+=`<div class="card newb" style="margin-bottom:10px"><b style="font-size:22px">🏆 ¡Nuevo récord: ${G.score.toLocaleString('es-MX')} puntos!</b></div>`;
+  if(newRank[0]!==prevRank[0])nw+=`<div class="card newb" style="margin-bottom:10px"><b style="font-size:22px">${newRank[1]} ¡Subiste de rango! Ahora eres ${newRank[2]}</b></div>`;
+  if(G.newMedals.length)nw+=`<div class="card newb"><b style="font-size:22px">Nuevas medallas</b><div class="medals" style="margin-top:10px">${G.newMedals.map(id=>{const m=MEDALS.find(x=>x[0]===id);return `<div class="md"><div class="e">${m[1]}</div><b>${m[2]}</b><small>${m[3]}</small></div>`}).join('')}</div></div>`;
+  document.getElementById('r-new').innerHTML=nw;
+  const uniq=[...new Map(G.mistakes.map(m=>[fk(m.a,m.b),m])).values()];
+  document.getElementById('r-mist-card').style.display=uniq.length?'block':'none';
+  document.getElementById('r-mist').innerHTML=uniq.map(m=>`<span>${m.a} × ${m.b} = <b>${m.a*m.b}</b></span>`).join('');
+  document.getElementById('r-retry').style.display=uniq.length?'':'none';
+  show('s-result');
+  snd(G.newMedals.length?'medal':'win');
+  if(stars>=2)confetti();
+}
+function award(id){if(!S.medals[id]){S.medals[id]=Date.now();G&&G.newMedals.push(id)}}
+
+/* ===== Premios ===== */
+function renderMedals(){
+  const {r,nx}=rankOf(S.stars);
+  document.getElementById('m-rank-e').textContent=r[1];document.getElementById('m-rank').textContent=r[2]+' · '+S.stars+' ⭐';
+  document.getElementById('m-rank-next').textContent=nx?`Faltan ${nx[0]-S.stars} ⭐ para ${nx[2]} ${nx[1]}`:'¡Rango máximo alcanzado!';
+  document.getElementById('m-rank-bar').style.width=nx?((S.stars-r[0])/(nx[0]-r[0])*100)+'%':'100%';
+  document.getElementById('m-games').textContent=S.games;document.getElementById('m-correct').textContent=S.correct;
+  document.getElementById('m-best').textContent=S.best.toLocaleString('es-MX');document.getElementById('m-bstreak').textContent=S.bstreak;
+  const tabMed=[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>{const t=tableStat(n),tot=t.c+t.w;return `<div class="md ${mastered(n)?'':'lock'}"><div class="e">🏅</div><b>Tabla del ${n}</b><small>${tot?Math.round(t.c/tot*100)+'% · '+tot+' resp.':'Sin jugar'}</small></div>`}).join('');
+  document.getElementById('medals').innerHTML=MEDALS.map(m=>`<div class="md ${S.medals[m[0]]?'':'lock'}"><div class="e">${m[1]}</div><b>${m[2]}</b><small>${m[3]}</small></div>`).join('')+tabMed;
+}
+function askReset(){modal('¿Borrar todo?','Se pierden estrellas, medallas y récords.',[['Cancelar',closeModal],['Borrar',()=>{S=blank();save();closeModal();renderMedals()}]])}
+
+/* ===== Tabla completa ===== */
+function renderGrid(){
+  const g=document.getElementById('grid');let h='<div class="h">×</div>';
+  for(let c=1;c<=12;c++)h+=`<div class="h" data-c="${c}">${c}</div>`;
+  for(let r=1;r<=12;r++){h+=`<div class="h" data-r="${r}">${r}</div>`;
+    for(let c=1;c<=12;c++){const f=factStat(r,c),weak=f.w>=2&&f.w>=f.c/3;h+=`<div data-a="${r}" data-b="${c}" class="${weak?'weak':''}">${r*c}</div>`}}
+  g.innerHTML=h;
+  g.onclick=e=>{const d=e.target.closest('div[data-a],div[data-r],div[data-c]');if(!d)return;snd('tap');
+    g.querySelectorAll('.hl,.x').forEach(x=>x.classList.remove('hl','x'));
+    if(d.dataset.a){const a=+d.dataset.a,b=+d.dataset.b;
+      g.querySelectorAll('div[data-a]').forEach(x=>{if(+x.dataset.a===a&&+x.dataset.b<=b||+x.dataset.b===b&&+x.dataset.a<=a)x.classList.add('hl')});
+      d.classList.add('x');document.getElementById('t-fact').textContent=`${a} × ${b} = ${a*b}`}
+    else{const n=+(d.dataset.r||d.dataset.c);
+      g.querySelectorAll('div[data-a]').forEach(x=>{if(+x.dataset.a===n||+x.dataset.b===n)x.classList.add('hl')});
+      document.getElementById('t-fact').textContent=`Tabla del ${n}`}};
+}
+
+/* ===== Modal (sin alert) ===== */
+function modal(t,p,btns){document.getElementById('mo-t').textContent=t;document.getElementById('mo-p').textContent=p;
+  const b=document.getElementById('mo-b');b.innerHTML='';btns.forEach(([txt,fn],i)=>{const x=document.createElement('button');x.className='btn'+(i===0&&btns.length>1?' sec':'');x.textContent=txt;x.onclick=fn;b.appendChild(x)});
+  document.getElementById('modal').classList.add('on')}
+function closeModal(){document.getElementById('modal').classList.remove('on');document.getElementById('mo-ta').style.display='none'}
+function exportBk(){
+  const code='MT1-'+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  modal('Tu código de respaldo','Ya está copiado. Pégalo en Notas o mándatelo por WhatsApp.',[['Listo',closeModal]]);
+  const ta=document.getElementById('mo-ta');ta.style.display='block';ta.value=code;ta.readOnly=true;
+  try{navigator.clipboard.writeText(code).catch(()=>{ta.select()})}catch(e){ta.select()}
+}
+function importBk(){
+  modal('Restaurar avance','Pega aquí tu código de respaldo. Reemplaza el avance actual.',[['Cancelar',closeModal],['Restaurar',()=>{
+    const v=document.getElementById('mo-ta').value.trim();
+    try{if(!v.startsWith('MT1-'))throw 0;const d=JSON.parse(decodeURIComponent(escape(atob(v.slice(4)))));S=Object.assign(blank(),d);save();closeModal();renderMedals();snd('medal');fx('✅ ¡Avance restaurado!','#3ddc84')}
+    catch(e){document.getElementById('mo-p').textContent='Código inválido. Revisa que esté completo.'}
+  }]]);
+  const ta=document.getElementById('mo-ta');ta.style.display='block';ta.value='';ta.readOnly=false;ta.focus();
+}
+
+/* ===== Fondo de estrellas + confeti ===== */
+const cv=document.getElementById('stars'),cx=cv.getContext('2d');let pts=[],conf=[];
+function rs(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;pts=Array.from({length:120},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.6+.3,s:Math.random()*.3+.05}))}
+addEventListener('resize',rs);rs();
+function confetti(){const c=['#ffcc3d','#3ddc84','#4fc3ff','#b388ff','#ff5d6c'];for(let i=0;i<160;i++)conf.push({x:cv.width/2,y:cv.height*.35,vx:(Math.random()-.5)*28,vy:-Math.random()*26-6,c:c[i%5],s:(Math.random()*6+5)*devicePixelRatio,a:Math.random()*6,life:140})}
+(function loop(){cx.clearRect(0,0,cv.width,cv.height);cx.fillStyle='#fff';
+  pts.forEach(p=>{p.y+=p.s*devicePixelRatio;if(p.y>cv.height)p.y=0;cx.globalAlpha=.6;cx.beginPath();cx.arc(p.x,p.y,p.r*devicePixelRatio,0,7);cx.fill()});
+  cx.globalAlpha=1;conf=conf.filter(k=>k.life-->0);conf.forEach(k=>{k.vy+=.8;k.vx*=.98;k.x+=k.vx;k.y+=k.vy;k.a+=.2;cx.save();cx.translate(k.x,k.y);cx.rotate(k.a);cx.fillStyle=k.c;cx.fillRect(-k.s/2,-k.s/4,k.s,k.s/2);cx.restore()});
+  requestAnimationFrame(loop)})();
+
+renderHome();
+</script>
+</body>
+</html>
